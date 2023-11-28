@@ -21,15 +21,27 @@
 # For more info, see http://inst.eecs.berkeley.edu/~cs188/sp09/pacman.html
 
 
-"""
-To run (for Marcel): on cmd
-    cd C:\Users\Universitat\Documents\GitHub\pacman-agent
-    venv\Scripts\activate
-    cd pacman-contest/src/contest/
+def fake_function(): 
+    # this function is for comments. for some reason, the multiline comments does not work
+
+    # To run (for Marcel): on cmd
+        
+    # cd C:\Users\Universitat\Documents\GitHub\pacman-agent
+    # venv\Scripts\activate
+    # cd pacman-contest/src/contest/ 
     
-    python capture.py -r baselineTeam -b baselineTeam
-    python capture.py
-"""
+    
+    # python capture.py -r agents/team_template/myTeam.py -b agents\IntelArtif-P4_U199140_U185166\myTeam.py
+    # python capture.py -r agents/IntelArtif-P4_U199140_U185166/myTeam.py -b agents\team_template\myTeam.py
+
+
+    # python capture.py -r agents/team_template/myTeam.py -b agents/team_name_2/myTeam.py
+
+
+    # python capture.py
+
+
+    return 0
 
 
 import random
@@ -208,3 +220,9 @@ class DefensiveReflexAgent(ReflexCaptureAgent):
 
     def get_weights(self, game_state, action):
         return {'num_invaders': -1000, 'on_defense': 100, 'invader_distance': -10, 'stop': -100, 'reverse': -2}
+
+
+
+
+
+    
