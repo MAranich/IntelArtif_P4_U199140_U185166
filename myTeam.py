@@ -33,7 +33,8 @@ def fake_function():
     
     # python capture.py -r agents/team_template/myTeam.py -b agents\IntelArtif-P4_U199140_U185166\myTeam.py
     # python capture.py -r agents/IntelArtif-P4_U199140_U185166/myTeam.py -b agents\team_template\myTeam.py
-
+    # python capture.py -r agents/IntelArtif-P4_U199140_U185166/myTeam.py -b agents\IntelArtif-P4_U199140_U185166\myTeam.py
+    
 
     # python capture.py -r agents/team_template/myTeam.py -b agents/team_name_2/myTeam.py
 
