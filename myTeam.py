@@ -209,6 +209,63 @@ class DefensiveReflexAgent(ReflexCaptureAgent):
         return {'num_invaders': -1000, 'on_defense': 100, 'invader_distance': -10, 'stop': -100, 'reverse': -2}
 
 
+        """
+        Picks among the actions with the highest Q(s,a).
+        """
+        """
+        print(game_state.__dict__)
+        print(dir(game_state))
+        print("="*90)
+        print(game_state.data.__dict__)
+        print(dir(game_state.data))
+        raise ValueError
+        """
+        actions = game_state.get_legal_actions(self.index)
+        # You can profile your evaluation time by uncommenting these lines
+
+class GameStateSintetizedInfo : 
+    def __init__(_current_position, _ally_position, enemy_position, _food, _is_inside_territory, carried_food_quantity, enemy_is_weak) :
+        
+        # current agent position
+        self.current_position = _current_position 
+        # is true if agent is inside of it's territory
+        self.is_inside_territory = _is_inside_territory
+        # int for the amount of food the agent is carrying
+        self.carried_food = carried_food_quantity
+        # position of ally
+        self.ally_position = _ally_position
+        # position of the enemy 1
+        self.enemy_position_1 = enemy_position[0]
+        # is true if the enemy can be killed by walking into it, false othrewise
+        self.enemy_1_is_weak = enemy_is_weak[0]
+        # position of the enemy 2
+        self.enemy_position_2 = enemy_position[1]
+        # is true if the enemy can be killed by walking into it, false othrewise
+        self.enemy_2_is_weak = enemy_is_weak[1]
+        
+        # matrix of 0 and 1, indicating where there is food
+        self.food = _food
+
+def get_IA_value_function(sintetized_info): 
+    return random.random() # random 
+    
+    
+def fake_function(): 
+    # this function is for comments. for some reason, the multiline comments does not work
+    # To run (for Marcel): on cmd
+        
+    # cd C:\Users\Universitat\Documents\GitHub\pacman-agent
+    # venv\Scripts\activate
+    # cd pacman-contest/src/contest/ 
+    
+    
+    # python capture.py -r agents/team_template/myTeam.py -b agents\IntelArtif-P4_U199140_U185166\myTeam.py
+    # python capture.py -r agents/IntelArtif-P4_U199140_U185166/myTeam.py -b agents\team_template\myTeam.py
+    # python capture.py -r agents/IntelArtif-P4_U199140_U185166/myTeam.py -b agents\IntelArtif-P4_U199140_U185166\myTeam.py
+    
+    # python capture.py -r agents/team_template/myTeam.py -b agents/team_name_2/myTeam.py
+    # python capture.py
+    return 0
 
 class MinimaxAgent(ReflexCaptureAgent):
 
