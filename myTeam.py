@@ -211,8 +211,9 @@ class DefensiveReflexAgent(ReflexCaptureAgent):
 
 
 class GameStateSintetizedInfo : 
-    def __init__(_current_position, _ally_position, enemy_position, _food, _is_inside_territory, carried_food_quantity, enemy_is_weak) :
+    def __init__(self, _current_position, _ally_position, enemy_position, _food, _is_inside_territory, carried_food_quantity, enemy_is_weak) :
         
+        # considere adding information from the past? 
 
         # current agent position
         self.current_position = _current_position 
