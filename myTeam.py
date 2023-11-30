@@ -34,9 +34,9 @@ from util import nearestPoint
 import os # operating system lib
 import gymnasium as gym 
 # Documentation: https://gymnasium.farama.org/index.html
-from stable-baselines3 import PPO 
-from stable-baselines3.common.vec_env import DummyVecEnv
-from stable-baselines3.common.evaluation import evaluate_policy
+from stable_baselines3 import PPO 
+from stable_baselines3.common.vec_env import DummyVecEnv
+from stable_baselines3.common.evaluation import evaluate_policy
 
 ##################### 
 # Pacman envoirment # 
