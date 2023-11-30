@@ -21,15 +21,7 @@
 # For more info, see http://inst.eecs.berkeley.edu/~cs188/sp09/pacman.html
 
 
-"""
-To run (for Marcel): on cmd
-    cd C:\Users\Universitat\Documents\GitHub\pacman-agent
-    venv\Scripts\activate
-    cd pacman-contest/src/contest/
-    
-    python capture.py -r baselineTeam -b baselineTeam
-    python capture.py
-"""
+
 
 
 import random
