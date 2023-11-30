@@ -358,6 +358,7 @@ class PacmanRewardFunction:
     def __init__(self):
         # Create an instance of ClassA
         self.class_a_instance = MinimaxAgent()
+    
     def calculate_reward(current_state, next_state, action_taken):
 
         # Reward for collecting food
