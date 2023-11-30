@@ -222,32 +222,6 @@ class DefensiveReflexAgent(ReflexCaptureAgent):
         """
         actions = game_state.get_legal_actions(self.index)
         # You can profile your evaluation time by uncommenting these lines
-
-class GameStateSintetizedInfo : 
-    def __init__(_current_position, _ally_position, enemy_position, _food, _is_inside_territory, carried_food_quantity, enemy_is_weak) :
-        
-        # current agent position
-        self.current_position = _current_position 
-        # is true if agent is inside of it's territory
-        self.is_inside_territory = _is_inside_territory
-        # int for the amount of food the agent is carrying
-        self.carried_food = carried_food_quantity
-        # position of ally
-        self.ally_position = _ally_position
-        # position of the enemy 1
-        self.enemy_position_1 = enemy_position[0]
-        # is true if the enemy can be killed by walking into it, false othrewise
-        self.enemy_1_is_weak = enemy_is_weak[0]
-        # position of the enemy 2
-        self.enemy_position_2 = enemy_position[1]
-        # is true if the enemy can be killed by walking into it, false othrewise
-        self.enemy_2_is_weak = enemy_is_weak[1]
-        
-        # matrix of 0 and 1, indicating where there is food
-        self.food = _food
-
-def get_IA_value_function(sintetized_info): 
-    return random.random() # random 
     
     
 def fake_function(): 
@@ -270,7 +244,7 @@ def fake_function():
 class GameStateSintetizedInfo : 
     def __init__(self, _current_position, _ally_position, enemy_position, _food, _is_inside_territory, carried_food_quantity, enemy_is_weak) :
         
-        # considere adding information from the past? 
+        # consider adding information from the past? 
 
         # current agent position
         self.current_position = _current_position 
@@ -306,14 +280,14 @@ class MinimaxAgent(ReflexCaptureAgent):
 
 
     def getAction(self, gameState):
-
+        
         numberOfGhosts = gameState.getNumAgents() - 1
         def maxlevel(gameState, depth):
             c_depth = depth + 1
             # we check if the gameState is Win or Lose and if the current depth is equal to the self.depth and if any of this is true 
             # we just return the evaluationFunction 
             if gameState.isWin() or gameState.isLose() or c_depth==self.depth:
-                return self.evaluationFunction(gameState)
+                return self.get_IA_value_function(gameState)  # Use your custom evaluation function
             
             maxval = -999999
             legalActions = gameState.getLegalActions(0)
@@ -330,7 +304,7 @@ class MinimaxAgent(ReflexCaptureAgent):
             minvalue = 999999
             # we check if the gameState is Win or Lose and if any of this is true we just return the evaluationFunction 
             if gameState.isWin() or gameState.isLose():
-                return self.evaluationFunction(gameState)
+                return self.get_IA_value_function(gameState)  # Use your custom evaluation function
             
             legalActions = gameState.getLegalActions(agentIndex)
             #iterate through the legalActions
@@ -358,3 +332,47 @@ class MinimaxAgent(ReflexCaptureAgent):
                 finalAction = action
                 currentScore = score
         return finalAction
+    
+
+class PacmanRewardFunction:
+    def __init__(self):
+        # Create an instance of ClassA
+        self.class_a_instance = MinimaxAgent()
+    def calculate_reward(current_state, next_state, action_taken):
+
+        # Reward for collecting food
+        food_reward = PacmanRewardFunction.calculate_food_reward(next_state.carried_food - current_state.carried_food)
+
+        # Reward for killing enemies
+        enemy_reward = PacmanRewardFunction.calculate_enemy_reward(next_state.enemy_1_is_weak, next_state.enemy_2_is_weak)
+
+        # Combine individual rewards (you might want to adjust weights based on importance)
+        total_reward = food_reward + enemy_reward
+
+        return total_reward
+
+    def calculate_food_reward(food_collected):
+        # Define your reward for collecting food
+        return food_collected * 10  # You can adjust the multiplier
+
+
+    def calculate_enemy_reward(enemy_1_is_weak, enemy_2_is_weak):
+        # Define your reward for killing enemies
+        enemy_reward = 0
+        if enemy_1_is_weak:
+            enemy_reward += 20  # Adjust rewards based on the importance of killing enemies
+        if enemy_2_is_weak:
+            enemy_reward += 20
+
+        return enemy_reward
+
+def reward(self, current_state):
+    action_taken = PacmanRewardFunction.getAction(self, current_state)  # Replace with the actual action taken
+    next_state =  self.get_successor(self, current_state, action_taken) # Update with the next state after an action
+
+
+    reward = PacmanRewardFunction.calculate_reward(current_state, next_state, action_taken)
+    print("Reward:", reward)
+
+
+    
