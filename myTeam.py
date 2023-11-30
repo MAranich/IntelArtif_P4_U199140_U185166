@@ -22,7 +22,6 @@
 
 
 
-
 import random
 import util
 import numpy as np
@@ -75,6 +74,15 @@ class ReflexCaptureAgent(CaptureAgent):
     def choose_action(self, game_state):
         """
         Picks among the actions with the highest Q(s,a).
+        """
+
+        """
+        print(game_state.__dict__)
+        print(dir(game_state))
+        print("="*90)
+        print(game_state.data.__dict__)
+        print(dir(game_state.data))
+        raise ValueError
         """
         actions = game_state.get_legal_actions(self.index)
 
@@ -203,40 +211,5 @@ class DefensiveReflexAgent(ReflexCaptureAgent):
 
 
 
-def get_possible_actions(state):
-    # Your logic to get possible actions goes here
-    pass
 
-def get_successor_state(state, action):
-    # Your logic to get the successor state goes here
-    pass
-
-def game_over(state):
-    # Your logic to check if the game is over goes here
-    pass
-
-def minimax(state, depth, maximizing_player):
-    if depth == 0 or game_over(state):
-        return evaluate(state)
-
-    if maximizing_player:
-        max_eval = float('-inf')
-        for action in get_possible_actions(state):
-            child_state = get_successor_state(state, action)
-            eval = minimax(child_state, depth - 1, False)
-            max_eval = max(max_eval, eval)
-        return max_eval
-    else:
-        min_eval = float('inf')
-        for action in get_possible_actions(state):
-            child_state = get_successor_state(state, action)
-            eval = minimax(child_state, depth - 1, True)
-            min_eval = min(min_eval, eval)
-        return min_eval
-
-# Example usage:
-initial_state = # Your initial game state goes here
-depth = # Your desired search depth goes here
-best_score = minimax(initial_state, depth, True)
-
-print("Best Score:", best_score)
+    
