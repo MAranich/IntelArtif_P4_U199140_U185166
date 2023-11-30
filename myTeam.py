@@ -210,6 +210,59 @@ class DefensiveReflexAgent(ReflexCaptureAgent):
 
 
 
+class MinimaxAgent(ReflexCaptureAgent):
 
 
-    
+    def getAction(self, gameState):
+
+        numberOfGhosts = gameState.getNumAgents() - 1
+        def maxlevel(gameState, depth):
+            c_depth = depth + 1
+            # we check if the gameState is Win or Lose and if the current depth is equal to the self.depth and if any of this is true 
+            # we just return the evaluationFunction 
+            if gameState.isWin() or gameState.isLose() or c_depth==self.depth:
+                return self.evaluationFunction(gameState)
+            
+            maxval = -999999
+            legalActions = gameState.getLegalActions(0)
+            #iterate through the legalActions
+            for action in legalActions:
+                #get the succesors and check the max value between itself and the minlevel function using the successor as the gameState
+                successor= gameState.generateSuccessor(0, action)
+                maxval = max(maxval,minlevel(successor, c_depth, 1))
+
+            return maxval
+
+
+        def minlevel(gameState, depth,agentIndex):
+            minvalue = 999999
+            # we check if the gameState is Win or Lose and if any of this is true we just return the evaluationFunction 
+            if gameState.isWin() or gameState.isLose():
+                return self.evaluationFunction(gameState)
+            
+            legalActions = gameState.getLegalActions(agentIndex)
+            #iterate through the legalActions
+            for action in legalActions:
+                successor= gameState.generateSuccessor(agentIndex, action)
+                #we check if the current agent is the last one
+                if agentIndex == (gameState.getNumAgents() - 1):
+                    #if it is the last one, the next agent will be the max
+                    minvalue = min(minvalue,maxlevel(successor,depth))
+                else:
+                    #if it is not the last one, the next agent will also be a min
+                    minvalue = min(minvalue,minlevel(successor,depth,agentIndex+1))
+            return minvalue
+
+
+        legalActions = gameState.getLegalActions(0)
+        currentScore = -999999
+        finalAction = ''
+        #iterate through the legalActions
+        for action in legalActions:
+            next_State = gameState.generateSuccessor(0,action)
+            score = minlevel(next_State,0,1)
+            #search for the highest score and return the action
+            if score > currentScore:
+                finalAction = action
+                currentScore = score
+        return finalAction
