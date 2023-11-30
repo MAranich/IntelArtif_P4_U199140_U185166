@@ -215,32 +215,52 @@ class GameStateSintetizedInfo :
         
         # considere adding information from the past? 
 
-        # current agent position
+        # current agent position [array of ints]
         self.current_position = _current_position 
 
-        # is true if agent is inside of it's territory
+        # is true if agent is inside of it's territory [bool]
         self.is_inside_territory = _is_inside_territory
 
-        # int for the amount of food the agent is carrying
+        # int for the amount of food the agent is carrying [int]
         self.carried_food = carried_food_quantity
 
-        # position of ally
+        # position of ally [array of ints]
         self.ally_position = _ally_position
 
-        # position of the enemy 1
+        # position of the enemy 1 [array of ints]
         self.enemy_position_1 = enemy_position[0]
 
-        # is true if the enemy can be killed by walking into it, false othrewise
+        # is true if the enemy can be killed by walking into it, false othrewise [bool]
         self.enemy_1_is_weak = enemy_is_weak[0]
 
-        # position of the enemy 2
+        # position of the enemy 2 [array of ints]
         self.enemy_position_2 = enemy_position[1]
 
-        # is true if the enemy can be killed by walking into it, false othrewise
+        # is true if the enemy can be killed by walking into it, false othrewise [bool]
         self.enemy_2_is_weak = enemy_is_weak[1]
         
-        # matrix of 0 and 1, indicating where there is food
+        # matrix of 0 and 1, indicating where there is food [array of ints]
         self.food = _food
+
+    def get_data(self) : 
+        # join all info in a single array
+
+        data = []
+        data = data + self.current_position
+        data.append(self.is_inside_territory)
+        data.append(self.carried_food)
+        data = data + self.ally_position
+        data = data + self.enemy_position_1
+        data.append(self.enemy_1_is_weak)
+        data = data + self.enemy_position_2
+        data.append(self.enemy_2_is_weak)
+        data = data + self.food
+        
+        return data
+
+
+
+
 
 def get_IA_value_function(sintetized_info): 
     return random.random() # random 
