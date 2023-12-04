@@ -518,16 +518,41 @@ class BasicAgentAI(CaptureAgent) :
             # TODO: compute expected awnser
 
             # stop, dirs....
-            expected_result = np.array([0, 1, 0.5, 0.25, 0.125]) #sample awnser
-
+            # Inside choose_action method
+            
+            # TODO: Define your logic to compute the expected result dynamically
+            expected_result = compute_expected_result(game_state)
+            
             n_epochs = 1
+            self.model.fit(GameStateSintetizedInfo.get_info_nn(prev_state, self), expected_result, epochs=n_epochs)
+            self.model.save("tf_pacman_model")
 
-            model.fit(GameStateSintetizedInfo.get_info_nn(prev_state, self), expected_result, epochs = n_epochs)
+            self.model.fit(GameStateSintetizedInfo.get_info_nn(prev_state, self), expected_result, epochs = n_epochs)
 
-            model.save("tf_pacman_model")
+            self.model.save("tf_pacman_model")
 
 
+        def compute_expected_result(self, game_state):
+            # Example: Consider the reward for each action based on the current state
+            # You might need to replace this with your actual game logic.
 
+            pacman_position = game_state.get_agent_position(self.index)
+            food_positions = game_state.get_food().as_list()
+
+            # Compute distance to the nearest food for each action
+            distances_to_food = [manhattan_distance(pacman_position, food) for food in food_positions]
+
+            # Assign a higher reward for actions that move towards the nearest food
+            max_distance = max(distances_to_food) if distances_to_food else 1
+            normalized_distances = [1 - dist / max_distance for dist in distances_to_food]
+
+            # Create the expected result based on the distances
+            expected_result = np.array(normalized_distances)
+
+            return expected_result
+        
+        def manhattan_distance(pos1, pos2):
+            return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
 
         # current_pos = game_state.get_agent_position(self.index)
         # cnd = self.data.layout.walls[0][0]
@@ -551,6 +576,8 @@ class BasicAgentAI(CaptureAgent) :
 
         self.num_action += 1 #update counter
         return best_value_action[1]
+
+
 
 
 class MinimaxAgent(ReflexCaptureAgent):
