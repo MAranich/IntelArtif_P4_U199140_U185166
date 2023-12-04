@@ -31,6 +31,49 @@ from game import Directions
 from util import nearestPoint
 
 
+import os # operating system lib
+import gymnasium as gym 
+# Documentation: https://gymnasium.farama.org/index.html
+from stable_baselines3 import PPO 
+from stable_baselines3.common.vec_env import DummyVecEnv
+from stable_baselines3.common.evaluation import evaluate_policy
+
+##################### 
+# Pacman envoirment # 
+##################### 
+
+class PacmanEnvoirment(gym.Env) : # (gym.Env)
+    def __init__(self) : 
+        # TODO: initialize
+        self.state = []
+
+    def reset(self) : 
+        # reset env (?)
+
+        pass
+
+        # returns start state
+        return state
+
+    def step(self, action): 
+        # aply action
+        # returns new_state, reward, is_finished, and extra_info # (do NOT delete)
+
+        next_state = state
+
+        is_finished = False
+
+        reward = PacmanRewardFunction.calculate_reward(state, next_state, action)
+
+        extra_info = []
+
+        self.state = next_state
+        return next_state, reward, is_finished, extra_info
+
+    def render(): 
+        # render (unused)
+        return None
+
 #################
 # Team creation #
 #################
@@ -227,7 +270,9 @@ class DefensiveReflexAgent(ReflexCaptureAgent):
 def fake_function(): 
     # this function is for comments. for some reason, the multiline comments does not work
     # To run (for Marcel): on cmd
-        
+
+    # C:\Users\Universitat\Documents\GitHub\pacman-agent\pacman-contest\src\contest\
+
     # cd C:\Users\Universitat\Documents\GitHub\pacman-agent
     # venv\Scripts\activate
     # cd pacman-contest/src/contest/ 
@@ -239,6 +284,23 @@ def fake_function():
     
     # python capture.py -r agents/team_template/myTeam.py -b agents/team_name_2/myTeam.py
     # python capture.py
+
+    """
+    
+    pip install stable-baselines3[extra]
+
+    ######
+
+    import os # operating system lib
+    import gymnasium as gym 
+    # Documentation: https://gymnasium.farama.org/index.html
+    from stable-baselines3 import PPO 
+    from stable-baselines3.common.vec_env import DummyVecEnv
+    from stable-baselines3.common.evaluation import evaluate_policy
+    
+    """
+
+
     return 0
 
 class GameStateSintetizedInfo : 
@@ -375,10 +437,18 @@ class PacmanRewardFunction:
     def calculate_food_reward(food_collected):
         # Define your reward for collecting food
         return food_collected * 10  # You can adjust the multiplier
+        # this method has to be redone. this gives the agent a reward for 
+        # hoarding food and not crossing to ally territory
 
 
     def calculate_enemy_reward(enemy_1_is_weak, enemy_2_is_weak):
         # Define your reward for killing enemies
+
+        return 20 * (int(enemy_1_is_weak) + int(enemy_2_is_weak))# rewritten the function without ifs
+        # return 20 * (enemy_1_is_weak + enemy_2_is_weak) # maybe this is even better (?)
+
+        # ^this method is giving the agent a reward continously while they are exposed
+
         enemy_reward = 0
         if enemy_1_is_weak:
             enemy_reward += 20  # Adjust rewards based on the importance of killing enemies
