@@ -4,7 +4,7 @@
 
 **Semester:** Semester 2, 2023
 
-**Instructor:** _[name of your instructor]_
+**Instructor:** Sergio Calo
 
 **Team name:** _[replace this with team name in plan text]_
 
