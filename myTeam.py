@@ -9,7 +9,7 @@
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
 # Student side autograding was added by Brad Miller, Nick Hay, and
-# Pieter Abbeel (pabbeel@cs.berkeley.edu).
+# Pieter Abbeel (pabbeel@cs.berkeley.edu). 
 
 
 # baselineTeam.py
@@ -23,31 +23,61 @@
 
 
 import random
-import util
+import contest.util
 import numpy as np
 
-from captureAgents import CaptureAgent
-from game import Directions
-from util import nearestPoint
+from contest.captureAgents import CaptureAgent
+from contest.game import Directions
+from contest.util import nearestPoint
 
 
 import os # operating system lib
-import gymnasium as gym 
-# Documentation: https://gymnasium.farama.org/index.html
-from stable_baselines3 import PPO 
-from stable_baselines3.common.vec_env import DummyVecEnv
-from stable_baselines3.common.evaluation import evaluate_policy
+from tensorflow.keras.models import Sequential, load_model
+from tensorflow.keras.layers import Dense
 
 ##################### 
 # Pacman envoirment # 
 ##################### 
 
+r"""
 class PacmanEnvoirment(gym.Env) : # (gym.Env)
-    def __init__(self) : 
+    def __init__(self, initial_state) : 
         # TODO: initialize
-        self.state = []
 
-    def reset(self) : 
+        self.action_space = gym.spaces.Discrete(5) # return action direcly
+
+        # self.action_space = gym.spaces.Box(-99999.99, 99999.99, dtype=np.float32)
+        # IA should return the value function in reange [-99999.99, 99999.99]
+
+        width, height = (32, 16) # size of the maze
+
+        self.state = initial_state # actual game_state
+
+        # info visible to IA
+        self.observation_state = gym.spaces.Dict( {
+            "pos_x": gym.spaces.Discrete(width), 
+            "pos_y": gym.spaces.Discrete(height), 
+            "is_inside_territory": gym.spaces.Discrete(2),
+            "carried_food": gym.spaces.Discrete(99), # assume max food is 99
+
+            "ally_pos_x": gym.spaces.Discrete(width), 
+            "ally_pos_y": gym.spaces.Discrete(height),
+            
+            "enemy_1_pos_x": gym.spaces.Discrete(width), 
+            "enemy_1_pos_y": gym.spaces.Discrete(height),
+            "enemy_1_is_weak": gym.spaces.Discrete(2),
+
+            "enemy_2_pos_x": gym.spaces.Discrete(width), 
+            "enemy_2_pos_y": gym.spaces.Discrete(height),
+            "enemy_2_is_weak": gym.spaces.Discrete(2),
+            
+            "food": gym.spaces.MultiBinary(width * height) # hot encode every possible food pos
+            
+            })
+
+
+
+    def reset(self, state) : 
         # reset env (?)
 
         pass
@@ -74,6 +104,8 @@ class PacmanEnvoirment(gym.Env) : # (gym.Env)
         # render (unused)
         return None
 
+"""
+
 #################
 # Team creation #
 #################
@@ -94,6 +126,34 @@ def create_team(first_index, second_index, is_red,
     any extra arguments, so you should make sure that the default
     behavior is what you want for the nightly contest.
     """
+
+    """
+    print()
+    print()
+
+    print(eval(first).__dict__)
+
+    print()
+
+    print(dir(eval(first)))
+
+    print()
+
+    print(eval(first)(first_index).__dict__)
+
+    print()
+
+    print(dir(eval(first)(first_index)))
+    # print(help(eval))
+
+    print()
+    print()
+    print()
+
+    raise ValueError
+    """
+
+
     return [eval(first)(first_index), eval(second)(second_index)]
 
 
@@ -115,18 +175,44 @@ class ReflexCaptureAgent(CaptureAgent):
         CaptureAgent.register_initial_state(self, game_state)
 
     def choose_action(self, game_state):
+
         """
         Picks among the actions with the highest Q(s,a).
         """
 
         """
+
+        print()
+        print()
+        print()
+        print()
+
         print(game_state.__dict__)
         print(dir(game_state))
         print("="*90)
         print(game_state.data.__dict__)
         print(dir(game_state.data))
+
+
+        width, height = (game_state.data.food.width, game_state.data.food.height)
+
+        print(width, height)
+
+        print(game_state.data.layout.width, game_state.data.layout.height)
+
+
+        print(game_state.data.__dict__)
+        print()
+        print(dir(game_state.data))
+        print()
+
+
         raise ValueError
         """
+
+
+
+
         actions = game_state.get_legal_actions(self.index)
 
         # You can profile your evaluation time by uncommenting these lines
@@ -186,7 +272,7 @@ class ReflexCaptureAgent(CaptureAgent):
         """
         Normally, weights do not depend on the game state.  They can be either
         a counter or a dictionary.
-        """
+        """ 
         return {'successor_score': 1.0}
 
 
@@ -271,23 +357,29 @@ def fake_function():
     # this function is for comments. for some reason, the multiline comments does not work
     # To run (for Marcel): on cmd
 
-    # C:\Users\Universitat\Documents\GitHub\pacman-agent\pacman-contest\src\contest\
+    r"""
+    Garbage text
+    C:\Users\Universitat\Documents\GitHub\pacman-agent\pacman-contest\src\contest\
+    
+    
 
-    # cd C:\Users\Universitat\Documents\GitHub\pacman-agent
-    # venv\Scripts\activate
-    # cd pacman-contest/src/contest/ 
-    
-    
-    # python capture.py -r agents/team_template/myTeam.py -b agents\IntelArtif-P4_U199140_U185166\myTeam.py
-    # python capture.py -r agents/IntelArtif-P4_U199140_U185166/myTeam.py -b agents\team_template\myTeam.py
-    # python capture.py -r agents/IntelArtif-P4_U199140_U185166/myTeam.py -b agents\IntelArtif-P4_U199140_U185166\myTeam.py
-    
-    # python capture.py -r agents/team_template/myTeam.py -b agents/team_name_2/myTeam.py
-    # python capture.py
+cd C:\Users\Universitat\Documents\GitHub\pacman-agent
+venv\Scripts\activate
+cd pacman-contest/src/contest/ 
 
-    """
+
+python capture.py -r agents/IntelArtif-P4_U199140_U185166/myTeam.py -b agents\team_template\myTeam.py
+
+python capture.py -r agents/team_template/myTeam.py -b agents\IntelArtif-P4_U199140_U185166\myTeam.py
+python capture.py -r agents/IntelArtif-P4_U199140_U185166/myTeam.py -b agents\IntelArtif-P4_U199140_U185166\myTeam.py
+
+
+    python capture.py -r agents/team_template/myTeam.py -b agents/team_name_2/myTeam.py
+    python capture.py
+
+    pip install tensorflow
     
-    pip install stable-baselines3[extra]
+    # pip install stable-baselines3[extra]
 
     ######
 
@@ -304,7 +396,8 @@ def fake_function():
     return 0
 
 class GameStateSintetizedInfo : 
-    def __init__(self, _current_position, _ally_position, enemy_position, _food, _is_inside_territory, carried_food_quantity, enemy_is_weak) :
+    # kinda deprecated
+    def __init__(self, _current_position, _ally_position, _is_ally_inside_territory, enemy_position, _food, _is_inside_territory, carried_food_quantity, enemy_is_weak) :
         
         # consider adding information from the past? 
 
@@ -319,6 +412,9 @@ class GameStateSintetizedInfo :
 
         # position of ally [array of ints]
         self.ally_position = _ally_position
+
+        # is true if ally is inside of it's territory [bool]
+        self.is_ally_inside_territory = _is_ally_inside_territory
 
         # position of the enemy 1 [array of ints]
         self.enemy_position_1 = enemy_position[0]
@@ -351,12 +447,111 @@ class GameStateSintetizedInfo :
         
         return data
 
+    def get_data_tuple(self) : 
+
+        data = (self.current_position, 
+                self.is_inside_territory, 
+                self.carried_food, 
+                self.ally_position, 
+                self.enemy_position_1, 
+                self.enemy_1_is_weak, 
+                self.enemy_position_2, 
+                self.enemy_2_is_weak, 
+                self.food)
+
+    def get_info_nn(game_state, capture_agent) : 
+        
+        team_index = capture_agent.get_team(game_state)
+        agent_index = capture_agent.index
+        team_index.remove(agent_index) # team_index now should have only 1 value
+        game_state.data.agent_states
+
+        agent_position = game_state.data.agent_states[agent_index].get_position()
+        data = [x for x in agent_position]
+
+        data.append((agent_position[0] < 16) ^ not(capture_agent.red)) #is in territory
+        
+        data.append(0) # food carried
+
+        ally_position = game_state.data.agent_states[team_index[0]].get_position()
+        data += [x for x in ally_position]
+        data.append((ally_position[0] < 16) ^ not(capture_agent.red)) #is in territory
+
+
+        enemy_index = capture_agent.get_opponents(game_state)
+
+        enemy_position = game_state.data.agent_states[enemy_index[0]].get_position()
+        data += [x for x in enemy_position]
+        data.append(0) # is vulnerable
+
+        enemy_position = game_state.data.agent_states[enemy_index[1]].get_position()
+        data += [x for x in enemy_position]
+        data.append(0) # is vulnerable
+
+        return np.array(data) 
+
+
+class BasicAgentAI(CaptureAgent) : 
+    def __init__(self, _index, time_for_computing=.1): 
+
+        super().__init__(index, time_for_computing)
+        self.start = None
+
+        self.training = False
+
+        self.model = load_model('tf_pacman_model') #load model
+
+        self.index = _index
+        log_path = os.path.join("agents", "IntelArtif-P4_U199140_U185166", "model")
+
+        self.num_action = 0 # counter for number of actions done
+
+
+    
+    def choose_action(self, game_state): 
+
+
+        if(self.training) : 
+            prev_state = self.get_previous_observation()
+            # game_state = self.get_current_observation()
+
+            # TODO: compute expected awnser
+
+            # stop, dirs....
+            expected_result = np.array([0, 1, 0.5, 0.25, 0.125]) #sample awnser
+
+            n_epochs = 1
+
+            model.fit(GameStateSintetizedInfo.get_info_nn(prev_state, self), expected_result, epochs = n_epochs)
+
+            model.save("tf_pacman_model")
 
 
 
 
-def get_IA_value_function(sintetized_info): 
-    return random.random() # random 
+        # current_pos = game_state.get_agent_position(self.index)
+        # cnd = self.data.layout.walls[0][0]
+
+        total_actions = ["North", "East", "South",  "West"]
+        valid_actions = game_state.get_legal_actions(self.index)
+
+        model_output = self.model.predict(GameStateSintetizedInfo.get_info_nn(game_state)) 
+        
+        print(f"Iteration {self.num_action}\t IA results: {model_output}")
+
+
+        best_value_action = ("Stop", model_output[0])
+        i = 1 
+        for action in total_actions : 
+            if(action in valid_actions) : 
+                if(best_value_action[1] < model_output[i]) : 
+                    best_value_action = (action, model_output[i])
+            i += 1
+
+
+        self.num_action += 1 #update counter
+        return best_value_action[1]
+
 
 class MinimaxAgent(ReflexCaptureAgent):
 

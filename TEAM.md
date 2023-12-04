@@ -1,6 +1,6 @@
 # Team Information
 
-**Course:** _[fill your course code and name]_
+**Course:** Inteligencia Artificial
 
 **Semester:** Semester 2, 2023
 
@@ -10,9 +10,9 @@
 
 **Team members:**
 
-* Student 1's Student number - Full Name - Student email - Student Github id
-* Student 2's Student number - Full Name - Student email - Student Github id
-* Student 3's Student number - Full Name - Student email - Student Github id
+* U185166 - Marcel Aranich - marcel.aranich01@estudiant.upf.edu - Student Github id
+* U1????? - Gerard Cabot - gerard.cabot01@estudiant.upf.edu - Student Github id
+
 
 Replace the lines above with the correct details of members. Delete or add lines as needed.
 
