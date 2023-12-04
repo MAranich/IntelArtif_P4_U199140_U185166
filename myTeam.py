@@ -469,13 +469,13 @@ class GameStateSintetizedInfo :
         agent_position = game_state.data.agent_states[agent_index].get_position()
         data = [x for x in agent_position]
 
-        data.append((agent_position[0] < 16) ^ not(capture_agent.red)) #is in territory
+        data.append((agent_position[0] < 16) != capture_agent.red)  # is in territory
         
         data.append(0) # food carried
 
         ally_position = game_state.data.agent_states[team_index[0]].get_position()
         data += [x for x in ally_position]
-        data.append((ally_position[0] < 16) ^ not(capture_agent.red)) #is in territory
+        data.append((ally_position[0] < 16) !=(capture_agent.red)) #is in territory
 
 
         enemy_index = capture_agent.get_opponents(game_state)
@@ -494,7 +494,7 @@ class GameStateSintetizedInfo :
 class BasicAgentAI(CaptureAgent) : 
     def __init__(self, _index, time_for_computing=.1): 
 
-        super().__init__(index, time_for_computing)
+        super().__init__(_index, time_for_computing)
         self.start = None
 
         self.training = False
