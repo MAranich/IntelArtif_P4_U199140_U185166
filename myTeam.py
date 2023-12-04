@@ -23,7 +23,7 @@
 
 
 import random
-import contest.util
+import util
 import numpy as np
 
 from contest.captureAgents import CaptureAgent
@@ -32,79 +32,13 @@ from contest.util import nearestPoint
 
 
 import os # operating system lib
-from tensorflow.keras.models import Sequential, load_model
+from tensorflow.keras.models import Sequential # , load_model
 from tensorflow.keras.layers import Dense
 
-##################### 
-# Pacman envoirment # 
-##################### 
-
-r"""
-class PacmanEnvoirment(gym.Env) : # (gym.Env)
-    def __init__(self, initial_state) : 
-        # TODO: initialize
-
-        self.action_space = gym.spaces.Discrete(5) # return action direcly
-
-        # self.action_space = gym.spaces.Box(-99999.99, 99999.99, dtype=np.float32)
-        # IA should return the value function in reange [-99999.99, 99999.99]
-
-        width, height = (32, 16) # size of the maze
-
-        self.state = initial_state # actual game_state
-
-        # info visible to IA
-        self.observation_state = gym.spaces.Dict( {
-            "pos_x": gym.spaces.Discrete(width), 
-            "pos_y": gym.spaces.Discrete(height), 
-            "is_inside_territory": gym.spaces.Discrete(2),
-            "carried_food": gym.spaces.Discrete(99), # assume max food is 99
-
-            "ally_pos_x": gym.spaces.Discrete(width), 
-            "ally_pos_y": gym.spaces.Discrete(height),
-            
-            "enemy_1_pos_x": gym.spaces.Discrete(width), 
-            "enemy_1_pos_y": gym.spaces.Discrete(height),
-            "enemy_1_is_weak": gym.spaces.Discrete(2),
-
-            "enemy_2_pos_x": gym.spaces.Discrete(width), 
-            "enemy_2_pos_y": gym.spaces.Discrete(height),
-            "enemy_2_is_weak": gym.spaces.Discrete(2),
-            
-            "food": gym.spaces.MultiBinary(width * height) # hot encode every possible food pos
-            
-            })
+from tensorflow.keras.saving import save_model
+from tensorflow.keras.saving import load_model
 
 
-
-    def reset(self, state) : 
-        # reset env (?)
-
-        pass
-
-        # returns start state
-        return state
-
-    def step(self, action): 
-        # aply action
-        # returns new_state, reward, is_finished, and extra_info # (do NOT delete)
-
-        next_state = state
-
-        is_finished = False
-
-        reward = PacmanRewardFunction.calculate_reward(state, next_state, action)
-
-        extra_info = []
-
-        self.state = next_state
-        return next_state, reward, is_finished, extra_info
-
-    def render(): 
-        # render (unused)
-        return None
-
-"""
 
 #################
 # Team creation #
@@ -127,32 +61,10 @@ def create_team(first_index, second_index, is_red,
     behavior is what you want for the nightly contest.
     """
 
-    """
-    print()
-    print()
 
-    print(eval(first).__dict__)
 
-    print()
-
-    print(dir(eval(first)))
-
-    print()
-
-    print(eval(first)(first_index).__dict__)
-
-    print()
-
-    print(dir(eval(first)(first_index)))
-    # print(help(eval))
-
-    print()
-    print()
-    print()
-
-    raise ValueError
-    """
-
+    first = "BasicAgentAI" 
+    # second = "BasicAgentAI"
 
     return [eval(first)(first_index), eval(second)(second_index)]
 
@@ -368,10 +280,10 @@ venv\Scripts\activate
 cd pacman-contest/src/contest/ 
 
 
-python capture.py -r agents/IntelArtif-P4_U199140_U185166/myTeam.py -b agents\team_template\myTeam.py
+python capture.py -r agents/IntelArtif_P4_U199140_U185166/myTeam.py -b agents\team_template\myTeam.py
 
-python capture.py -r agents/team_template/myTeam.py -b agents\IntelArtif-P4_U199140_U185166\myTeam.py
-python capture.py -r agents/IntelArtif-P4_U199140_U185166/myTeam.py -b agents\IntelArtif-P4_U199140_U185166\myTeam.py
+python capture.py -r agents/team_template/myTeam.py -b agents\IntelArtif_P4_U199140_U185166\myTeam.py
+python capture.py -r agents/IntelArtif_P4_U199140_U185166/myTeam.py -b agents\IntelArtif-P4_U199140_U185166\myTeam.py
 
 
     python capture.py -r agents/team_template/myTeam.py -b agents/team_name_2/myTeam.py
@@ -470,25 +382,36 @@ class GameStateSintetizedInfo :
         data = [x for x in agent_position]
 
         data.append((agent_position[0] < 16) != capture_agent.red)  # is in territory
+        # data.append((agent_position[0] < 16) ^ (capture_agent.red == False)) #is in territory
         
         data.append(0) # food carried
 
         ally_position = game_state.data.agent_states[team_index[0]].get_position()
         data += [x for x in ally_position]
         data.append((ally_position[0] < 16) !=(capture_agent.red)) #is in territory
+        # data.append((ally_position[0] < 16) ^ (capture_agent.red == False)) #is in territory
 
 
         enemy_index = capture_agent.get_opponents(game_state)
 
         enemy_position = game_state.data.agent_states[enemy_index[0]].get_position()
+        if(enemy_position == None): 
+            enemy_position = [0, 0]
         data += [x for x in enemy_position]
         data.append(0) # is vulnerable
 
         enemy_position = game_state.data.agent_states[enemy_index[1]].get_position()
+        if(enemy_position == None): 
+            enemy_position = [0, 0]
         data += [x for x in enemy_position]
         data.append(0) # is vulnerable
 
-        return np.array(data) 
+        for sub_list in capture_agent.get_food(game_state): 
+            data += sub_list
+
+        ret = np.array(data) # 13 + 16 * 32  vals
+
+        return ret
 
 
 class BasicAgentAI(CaptureAgent) : 
@@ -498,12 +421,13 @@ class BasicAgentAI(CaptureAgent) :
         self.start = None
 
         self.training = False
+        
 
-        self.model = load_model('tf_pacman_model') #load model
+        self.full_path = os.path.join("agents", "IntelArtif_P4_U199140_U185166", "model", "tf_pacman_model")
+
+        self.model = load_model(self.full_path) #load model
 
         self.index = _index
-        log_path = os.path.join("agents", "IntelArtif-P4_U199140_U185166", "model")
-
         self.num_action = 0 # counter for number of actions done
 
 
@@ -527,9 +451,13 @@ class BasicAgentAI(CaptureAgent) :
             self.model.fit(GameStateSintetizedInfo.get_info_nn(prev_state, self), expected_result, epochs=n_epochs)
             self.model.save("tf_pacman_model")
 
-            self.model.fit(GameStateSintetizedInfo.get_info_nn(prev_state, self), expected_result, epochs = n_epochs)
+            state_info_nn = GameStateSintetizedInfo.get_info_nn(prev_state, self)
+            print(state_info_nn)
+            self.model.fit(state_info_nn, expected_result, epochs = n_epochs)
 
-            self.model.save("tf_pacman_model")
+            # model.save("tf_pacman_model")
+
+            save_model(model=self.model, filepath=full_path, overwrite=True)
 
 
         def compute_expected_result(self, game_state):
@@ -560,7 +488,7 @@ class BasicAgentAI(CaptureAgent) :
         total_actions = ["North", "East", "South",  "West"]
         valid_actions = game_state.get_legal_actions(self.index)
 
-        model_output = self.model.predict(GameStateSintetizedInfo.get_info_nn(game_state)) 
+        model_output = self.model.predict(GameStateSintetizedInfo.get_info_nn(game_state, self)) 
         
         print(f"Iteration {self.num_action}\t IA results: {model_output}")
 
