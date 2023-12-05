@@ -34,6 +34,7 @@ from contest.util import nearestPoint
 import os # operating system lib
 from tensorflow.keras.models import Sequential # , load_model
 from tensorflow.keras.layers import Dense
+from tensorflow import expand_dims
 
 from tensorflow.keras.saving import save_model
 from tensorflow.keras.saving import load_model
@@ -419,6 +420,7 @@ class BasicAgentAI(CaptureAgent) :
 
         super().__init__(_index, time_for_computing)
         self.start = None
+        self.index = _index
 
         self.training = False
         
@@ -427,16 +429,16 @@ class BasicAgentAI(CaptureAgent) :
 
         self.model = load_model(self.full_path) #load model
 
-        self.index = _index
         self.num_action = 0 # counter for number of actions done
 
 
     
     def choose_action(self, game_state): 
 
+        prev_state = self.get_previous_observation()
+        
 
-        if(self.training) : 
-            prev_state = self.get_previous_observation()
+        if(self.training and prev_state != None) : 
             # game_state = self.get_current_observation()
 
             # TODO: compute expected awnser
@@ -446,18 +448,22 @@ class BasicAgentAI(CaptureAgent) :
             
             # TODO: Define your logic to compute the expected result dynamically
             expected_result = compute_expected_result(game_state)
-            
             n_epochs = 1
-            self.model.fit(GameStateSintetizedInfo.get_info_nn(prev_state, self), expected_result, epochs=n_epochs)
-            self.model.save("tf_pacman_model")
-
             state_info_nn = GameStateSintetizedInfo.get_info_nn(prev_state, self)
-            print(state_info_nn)
-            self.model.fit(state_info_nn, expected_result, epochs = n_epochs)
+
+
+            if True: # debug extra info (?)
+                print(state_info_nn)
+                print(f"Num epochs: {n_epochs}")
+                print(f"expected result: {expected_result}")
+            
+            expanded_input = expand_dims(state_info_nn, axis=-1)
+
+            self.model.fit(expanded_input, expected_result, epochs=n_epochs)
 
             # model.save("tf_pacman_model")
 
-            save_model(model=self.model, filepath=full_path, overwrite=True)
+            save_model(model=self.model, filepath=self.full_path, overwrite=True)
 
 
         def compute_expected_result(self, game_state):
@@ -488,9 +494,17 @@ class BasicAgentAI(CaptureAgent) :
         total_actions = ["North", "East", "South",  "West"]
         valid_actions = game_state.get_legal_actions(self.index)
 
-        model_output = self.model.predict(GameStateSintetizedInfo.get_info_nn(game_state, self)) 
         
-        print(f"Iteration {self.num_action}\t IA results: {model_output}")
+        state_info_nn = GameStateSintetizedInfo.get_info_nn(game_state, self)
+        
+        expanded_input = expand_dims(state_info_nn, axis=0)
+        # print(f"shape = {expanded_input.shape}")
+
+        # model_output = self.model.predict(expanded_input)  
+        model_output = self.model(expanded_input).numpy()[0]
+
+        
+        print(f"\nIteration {self.num_action}\t IA results: \t(shape: {model_output.shape})\n{model_output}")
 
 
         best_value_action = ("Stop", model_output[0])
@@ -503,7 +517,7 @@ class BasicAgentAI(CaptureAgent) :
 
 
         self.num_action += 1 #update counter
-        return best_value_action[1]
+        return best_value_action[0]
 
 
 
