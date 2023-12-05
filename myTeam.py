@@ -65,7 +65,7 @@ def create_team(first_index, second_index, is_red,
 
 
     first = "BasicAgentAI" 
-    # second = "BasicAgentAI"
+    second = "BasicAgentAI"
 
     return [eval(first)(first_index), eval(second)(second_index)]
 
