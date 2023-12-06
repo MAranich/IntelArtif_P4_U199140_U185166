@@ -435,31 +435,47 @@ class BasicAgentAI(CaptureAgent) :
     
     def choose_action(self, game_state): 
 
-        prev_state = self.get_previous_observation()
         valid_actions = game_state.get_legal_actions(self.index)
-        
+
+        random_factor = 0.4 # 40% chance of random action
+
+        if(random_factor < random.random()) : 
+            # do a random valid action
+
+            l = len(valid_actions)
+            action = random.choice(valid_actions, weights=[1] + [10] * (l - 1))
+            # select random action. Action "stop" is way less likely to be selected 
+            # action stop should be the 1st one and always be avaliable
+
+            total_actions = ["Stop", "North", "East", "South",  "West"]
+
+            fake_model_output = np.array([1 if x == action else 0 for x in total_actions])
+
+            self.prev_output = (fake_model_output, action) 
+            
+            return action
+
+
+
+        prev_state = self.get_previous_observation()
 
         if(self.training and prev_state != None) : 
             # game_state = self.get_current_observation()
 
-            # TODO: compute expected awnser
-
-            # stop, dirs....
-            # Inside choose_action method
-            
-            # TODO: Define your logic to compute the expected result dynamically
             # expected_result = compute_expected_result(game_state)
             n_epochs = 3
             state_info_nn = GameStateSintetizedInfo.get_info_nn(prev_state, self)
 
             reward = 0 # TODO: compute reward
-            
-            relevance_limit = 0.4
-            if not(-relevance_limit < reward < relevance_limit) : 
-                # if the reward is interesting enough, 
-                correct_vector = compute_reward_vector(self.prev_action[0], reward)
-                
+            reward  = PacmanRewardFunction.calculate_reward(prev_state, game_state, self.prev_output[1]):
 
+            
+            relevance_limit = 0.075
+            if not(-relevance_limit < reward < relevance_limit) : 
+                # if the reward is interesting enough, train the IA 
+
+                correct_vector = compute_reward_vector(self.prev_output[0], reward)
+                
                 if True: # debug extra info (?)
                     print(state_info_nn)
                     print(f"Num epochs: {n_epochs}")
@@ -643,12 +659,17 @@ class PacmanRewardFunction:
         # Reward for killing enemies
         enemy_reward = PacmanRewardFunction.calculate_enemy_reward(next_state.enemy_1_is_weak, next_state.enemy_2_is_weak)
 
+        # TODO: add small reward if agent is walking to the centre centre (+0.2 pt)
+
         # Combine individual rewards (you might want to adjust weights based on importance)
         total_reward = food_reward + enemy_reward
 
         return total_reward
 
-    def calculate_food_reward(food_collected):
+    def calculate_food_reward(food_collected): 
+
+        # TODO: return +1 pts if agent just eated a food
+
         # Define your reward for collecting food
         return food_collected * 10  # You can adjust the multiplier
         # this method has to be redone. this gives the agent a reward for 
@@ -656,6 +677,12 @@ class PacmanRewardFunction:
 
 
     def calculate_enemy_reward(enemy_1_is_weak, enemy_2_is_weak):
+
+        # TODO: return +1 pts if agent eated capsule that makes enemies scared
+        # +5 pts if agent killed an enemy agent
+        # -5 pts if agent was killed
+        
+
         # Define your reward for killing enemies
 
         return 20 * (int(enemy_1_is_weak) + int(enemy_2_is_weak))# rewritten the function without ifs
