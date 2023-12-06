@@ -436,6 +436,7 @@ class BasicAgentAI(CaptureAgent) :
     def choose_action(self, game_state): 
 
         prev_state = self.get_previous_observation()
+        valid_actions = game_state.get_legal_actions(self.index)
         
 
         if(self.training and prev_state != None) : 
@@ -447,19 +448,26 @@ class BasicAgentAI(CaptureAgent) :
             # Inside choose_action method
             
             # TODO: Define your logic to compute the expected result dynamically
-            expected_result = compute_expected_result(game_state)
-            n_epochs = 1
+            # expected_result = compute_expected_result(game_state)
+            n_epochs = 3
             state_info_nn = GameStateSintetizedInfo.get_info_nn(prev_state, self)
 
-
-            if True: # debug extra info (?)
-                print(state_info_nn)
-                print(f"Num epochs: {n_epochs}")
-                print(f"expected result: {expected_result}")
+            reward = 0 # TODO: compute reward
             
-            expanded_input = expand_dims(state_info_nn, axis=-1)
+            relevance_limit = 0.4
+            if not(-relevance_limit < reward < relevance_limit) : 
+                # if the reward is interesting enough, 
+                correct_vector = compute_reward_vector(self.prev_action[0], reward)
+                
 
-            self.model.fit(expanded_input, expected_result, epochs=n_epochs)
+                if True: # debug extra info (?)
+                    print(state_info_nn)
+                    print(f"Num epochs: {n_epochs}")
+                    print(f"expected result: {expected_result}")
+                
+                expanded_input = expand_dims(state_info_nn, axis=-1)
+
+                self.model.fit(expanded_input, correct_vector, epochs=n_epochs)
 
             # model.save("tf_pacman_model")
 
@@ -470,7 +478,6 @@ class BasicAgentAI(CaptureAgent) :
         # cnd = self.data.layout.walls[0][0]
 
         total_actions = ["North", "East", "South",  "West"]
-        valid_actions = game_state.get_legal_actions(self.index)
 
         
         state_info_nn = GameStateSintetizedInfo.get_info_nn(game_state, self)
@@ -480,6 +487,7 @@ class BasicAgentAI(CaptureAgent) :
 
         # model_output = self.model.predict(expanded_input)  
         model_output = self.model(expanded_input).numpy()[0]
+
 
         
         print(f"\nIteration {self.num_action}\t IA results: \t(shape: {model_output.shape})\n{model_output}")
@@ -493,6 +501,7 @@ class BasicAgentAI(CaptureAgent) :
                     best_value_action = (action, model_output[i])
             i += 1
 
+        self.prev_output = (model_output, best_value_action[0]) # store record for training
 
         self.num_action += 1 #update counter
         return best_value_action[0]
