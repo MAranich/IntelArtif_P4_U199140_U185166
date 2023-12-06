@@ -443,7 +443,7 @@ class BasicAgentAI(CaptureAgent) :
             # do a random valid action
 
             l = len(valid_actions)
-            action = random.choice(valid_actions, weights=[1] + [10] * (l - 1))
+            action = random.choices(valid_actions, weights =[1] + [10] * (l - 1))[0]
             # select random action. Action "stop" is way less likely to be selected 
             # action stop should be the 1st one and always be avaliable
 
@@ -452,7 +452,9 @@ class BasicAgentAI(CaptureAgent) :
             fake_model_output = np.array([1 if x == action else 0 for x in total_actions])
 
             self.prev_output = (fake_model_output, action) 
-            
+
+            print(f"Random action ({random_factor * 100}%): {action}\n")
+
             return action
 
 
@@ -467,7 +469,7 @@ class BasicAgentAI(CaptureAgent) :
             state_info_nn = GameStateSintetizedInfo.get_info_nn(prev_state, self)
 
             reward = 0 # TODO: compute reward
-            reward  = PacmanRewardFunction.calculate_reward(prev_state, game_state, self.prev_output[1]):
+            reward  = PacmanRewardFunction.calculate_reward(prev_state, game_state, self.prev_output[1])
 
             
             relevance_limit = 0.075
