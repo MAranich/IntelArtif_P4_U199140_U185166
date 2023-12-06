@@ -519,6 +519,44 @@ class BasicAgentAI(CaptureAgent) :
         self.num_action += 1 #update counter
         return best_value_action[0]
 
+    def compute_reward_vector(vector_output, reward): 
+
+        """explanation: if we want to rienforce/discourege a behaviour, 
+        we can give a positive/negative reward to the agent. The reward "is" the
+        derivative of the error function, and the error function is the mse
+        (mean square error), therefore: 
+
+        reward = sumatory(correct_vec[i] - vector_output[i])
+
+        assuming vector_output is a list-like and has 5 numbers. Also assuming
+        vector_output is is the output of a soft_max
+
+        """
+
+        vector_output = np.array(vector_output[:5]) #convert to np.array, take only 1st 5 elements
+        vector_output = vector_output / np.sqrt(np.dot(vector_output, vector_output)) 
+        # ^normalize (magnitude = 1)
+
+        if(reward <= 0): #neg reward
+            correct_vec = np.array([1, 1, 1, 1, 1]) - vector_output
+            # this makes high values low and low values high. 
+            # this assumes that the output vector_output is the output of a 
+            # softmax. (every val is in [0, 1] and they all sum to 1)
+            # this will make np.sum(correct_vect - vector_output) a negative value
+
+
+        correct_vec = np.square(vector_output) # pronounce optimal choice, discourage others
+        correct_vec = correct_vec /np.sqrt(np.dot(correct_vec, correct_vec)) # normalize
+        original_reward = np.sum(correct_vec - vector_output)
+        
+        correct_vec = (reward/original_reward) * correct_vec
+        # ^vector with desired reward
+
+        return correct_vec
+
+
+
+
 
 
 
