@@ -649,11 +649,24 @@ class MinimaxAgent(ReflexCaptureAgent):
     
 
 class PacmanRewardFunction:
+    # currenly unused ===================
+
     def __init__(self):
         # Create an instance of ClassA
-        self.class_a_instance = MinimaxAgent()
+        # self.class_a_instance = MinimaxAgent()
+
+        """Instructions: 
+        The rewards have to be instantaneus. Giving the IA a positive reward 
+        will rienforce all the behaviurs exhivited since the last update. 
+        Do not give passive rewards. 
+
+        I marked with TODOs the parts that need atention
+        """
     
     def calculate_reward(current_state, next_state, action_taken):
+
+        # TODO: add position reward (?)
+
 
         # Reward for collecting food
         food_reward = PacmanRewardFunction.calculate_food_reward(next_state.carried_food - current_state.carried_food)
