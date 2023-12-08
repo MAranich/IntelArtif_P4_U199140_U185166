@@ -42,7 +42,7 @@ print(log_path)
 
 # model = Sequential([Input(shape= 525)])
 model = Sequential([
-    Dense(units=48, activation='softmax', input_shape=(525, )), 
+    Dense(units=48, activation='softmax', input_shape=(525, 1)), 
     Dense(units=64, activation='softmax'), 
     Dense(units=64, activation='softmax'), 
     Dense(units=32, activation='softmax'), 

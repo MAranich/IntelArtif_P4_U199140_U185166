@@ -295,6 +295,7 @@ python capture.py -r agents/team_name_2/myTeam.py -b agents/team_name_2/myTeam.p
 
     pip install tensorflow
     
+python agents/IntelArtif_P4_U199140_U185166/ModelSetup.py
 
     
     """
@@ -431,7 +432,10 @@ class BasicAgentAI(CaptureAgent) :
 
         valid_actions = game_state.get_legal_actions(self.index)
 
-        random_factor = 0.33 # 33% chance of random action
+        random_factor = 0 # 33% chance of random action
+
+        total_actions = ["Stop", "North", "East", "South",  "West"]
+
 
         if(random.random() < random_factor) : 
             # do a random valid action
@@ -441,7 +445,6 @@ class BasicAgentAI(CaptureAgent) :
             # select random action. Action "stop" is way less likely to be selected 
             # action stop should be the 1st one and always be avaliable
 
-            total_actions = ["Stop", "North", "East", "South",  "West"]
 
             fake_model_output = np.array([1 if x == action else 0 for x in total_actions])
 
@@ -462,30 +465,38 @@ class BasicAgentAI(CaptureAgent) :
             n_epochs = 3
             state_info_nn = GameStateSintetizedInfo.get_info_nn(prev_state, self)
 
-            reward = 0 # TODO: compute reward
-            reward  = PacmanRewardFunction.calculate_reward(prev_state, game_state, self.prev_output[1], self.index)
+            reward = PacmanRewardFunction.calculate_reward(prev_state, game_state, self.prev_output[1], self.index)
 
             
             relevance_limit = 0.075
             if not(-relevance_limit < reward < relevance_limit) : 
                 # if the reward is interesting enough, train the IA 
 
-                correct_vector = BasicAgentAI.compute_reward_vector(self.prev_output[0], reward)
+                index = 0 
+                for action in total_actions: 
+                    if(action == self.prev_output[1]): break
+                    index += 1
+                correct_vector = BasicAgentAI.compute_reward_vector(self.prev_output[0], index, reward)
                 
                 if True: # debug extra info (?)
                     # print(state_info_nn)
                     print(f"Num epochs: {n_epochs}")
+                    print(f"Reward = : {reward}")
                     print(f"corrected result: {correct_vector}")
                 
                 expanded_input = expand_dims(state_info_nn, axis=-1)
-                expanded_output = expand_dims(correct_vector, axis=-1)
+                expanded_output = correct_vector
+                # expanded_output = expand_dims(correct_vector, axis=-1)
+                #expanded_output = correct_vector.reshape(1, -1) 
 
                 print(expanded_input.shape)
                 print(correct_vector.shape)
                 print(expanded_output.shape)
+                #print(expanded_input)
+                print(expanded_output)
 
 
-                self.model.fit(expanded_input, expanded_output, epochs=n_epochs)
+                self.model.fit(expanded_input, correct_vector, epochs=n_epochs)
 
             # model.save("tf_pacman_model")
 
@@ -501,10 +512,10 @@ class BasicAgentAI(CaptureAgent) :
         state_info_nn = GameStateSintetizedInfo.get_info_nn(game_state, self)
         
         expanded_input = expand_dims(state_info_nn, axis=0)
-        # print(f"shape = {expanded_input.shape}")
+        print(f"shape = {expanded_input.shape}") # prints shape = (525, 1, 5)
 
         # model_output = self.model.predict(expanded_input)  
-        model_output = self.model(expanded_input).numpy()[0]
+        model_output = self.model.predict(expanded_input)[0][0]
 
 
         
@@ -548,7 +559,7 @@ class BasicAgentAI(CaptureAgent) :
         return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
 
 
-    def compute_reward_vector(vector_output, reward): 
+    def compute_reward_vector(vector_output, action_taken_index, reward): 
 
         """explanation: if we want to rienforce/discourege a behaviour, 
         we can give a positive/negative reward to the agent. The reward "is" the
@@ -563,8 +574,8 @@ class BasicAgentAI(CaptureAgent) :
         """
 
         vector_output = np.array(vector_output[:5]) #convert to np.array, take only 1st 5 elements
-        vector_output = vector_output / np.sqrt(np.dot(vector_output, vector_output)) 
-        # ^normalize (magnitude = 1)
+        vector_output = vector_output / np.sum(vector_output)
+        # ^normalize (sum of elements = 1)
 
         if(reward <= 0): #neg reward
             correct_vec = np.array([1, 1, 1, 1, 1]) - vector_output
@@ -572,19 +583,32 @@ class BasicAgentAI(CaptureAgent) :
             # this assumes that the output vector_output is the output of a 
             # softmax. (every val is in [0, 1] and they all sum to 1)
             # this will make np.sum(correct_vect - vector_output) a negative value
+            correct_vec[action_taken_index] *= 0.5 # extra decourage bad action
+            correct_vec = np.square(correct_vec)
+        else : 
+            correct_vec = np.square(vector_output) # pronounce optimal choice, discourage others
+            correct_vec[action_taken_index] += reward # extra encourage good action
 
-
-        correct_vec = np.square(vector_output) # pronounce optimal choice, discourage others
-        correct_vec = correct_vec /np.sqrt(np.dot(correct_vec, correct_vec)) # normalize
-        original_reward = np.sum(correct_vec - vector_output) * 0.2
+        
+        correct_vec = correct_vec/np.sum(correct_vec) # normalize
+        
+        
+        original_reward = np.sum(correct_vec - np.square(vector_output)) * 0.2
         # 0.2 = 1/5; 5 = len(vector_output)
         
         correct_vec = (reward/original_reward) * correct_vec
         # ^vector with desired reward (I think)
 
+
+
+
         return correct_vec
 
-
+def dot_product(u, v): 
+    sum = 0
+    for x, y in zip(u, v): 
+        sum += x * y
+    return sum
 
 
 
