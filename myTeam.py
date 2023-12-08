@@ -416,7 +416,7 @@ class BasicAgentAI(CaptureAgent) :
         self.start = None
         self.index = _index
 
-        self.training = False
+        self.training = True
         
 
         self.full_path = os.path.join("agents", "IntelArtif_P4_U199140_U185166", "model", "tf_pacman_model")
@@ -431,9 +431,9 @@ class BasicAgentAI(CaptureAgent) :
 
         valid_actions = game_state.get_legal_actions(self.index)
 
-        random_factor = 0.4 # 40% chance of random action
+        random_factor = 0.33 # 33% chance of random action
 
-        if(random_factor < random.random()) : 
+        if(random.random() < random_factor) : 
             # do a random valid action
 
             l = len(valid_actions)
@@ -645,10 +645,12 @@ class MinimaxAgent(ReflexCaptureAgent):
 class PacmanRewardFunction:
 
     # parameters
-    bonus_eating_capsule_multiplier = 1.5
-    eating_food_reward = 1
-    penalty_dying = -5
-    rewand_killing = 5
+    bonus_eating_capsule_multiplier = 0.75
+    eating_food_reward = 0.5
+    penalty_dying = -2.5
+    rewand_killing = 2.5
+    going_to_centre_reward = 0.15
+    moves_with_centre_reward = 20
 
     def __init__(self):
         # Create an instance of ClassA
@@ -674,10 +676,10 @@ class PacmanRewardFunction:
         # Reward for killing enemies
         enemy_reward = PacmanRewardFunction.calculate_enemy_reward(current_state, next_state, agent_index)
 
-        # TODO: add small reward if agent is walking to the centre centre (+0.2 pt)
+        going_centre_reward = going_to_centre_reward(current_state, next_state, agent_index)
 
         # Combine individual rewards (you might want to adjust weights based on importance)
-        total_reward = food_reward + enemy_reward
+        total_reward = food_reward + enemy_reward + going_centre_reward
 
         return total_reward
 
@@ -756,13 +758,36 @@ class PacmanRewardFunction:
                 kill_reward += self.reward_killing
                 break # 1 kill per turn
 
-
-            
-
-
         enemy_reward = bonus_eating_capsule + dying_penalty + kill_reward
 
         return enemy_reward
+
+    def going_to_centre_reward(current_state, next_state, agent_index) : 
+        
+        # this is a small reward intendet to make the agents seek the centre of the board
+        
+        agent_next = next_state.data.agent_states[agent_index]
+
+        if(self.moves_with_centre_reward < agent_next.num_action): 
+            return 0
+
+        centre_reward = 0
+
+        agent_current = current_state.data.agent_states[agent_index]
+        past_x, past_y = agent_current.pos
+        new_x, new_y = agent_next.pos
+
+        if(new_y != past_y): 
+            if(abs(16 - new_y) < abs(16 - past_y)): 
+                centre_reward += going_to_centre_reward
+            else: 
+                centre_reward += -going_to_centre_reward/2
+
+
+        return centre_reward
+
+
+
 
 def reward(self, current_state):
     action_taken = PacmanRewardFunction.getAction(self, current_state)  # Replace with the actual action taken
