@@ -287,6 +287,9 @@ python capture.py -r agents/team_template/myTeam.py -b agents\IntelArtif_P4_U199
 python capture.py -r agents/IntelArtif_P4_U199140_U185166/myTeam.py -b agents\IntelArtif-P4_U199140_U185166\myTeam.py
 
 
+python capture.py -r agents/team_name_2/myTeam.py -b agents/team_name_2/myTeam.py
+
+
     python capture.py -r agents/team_template/myTeam.py -b agents/team_name_2/myTeam.py
     python capture.py
 
@@ -644,6 +647,8 @@ class PacmanRewardFunction:
     # parameters
     bonus_eating_capsule_multiplier = 1.5
     eating_food_reward = 1
+    penalty_dying = -5
+    rewand_killing = 5
 
     def __init__(self):
         # Create an instance of ClassA
@@ -678,7 +683,7 @@ class PacmanRewardFunction:
 
     def calculate_food_reward(current_state, next_state, agent_index): 
         agent_next = next_state.data.agent_states[agent_index]
-        new_x, new_y = current_agent.pos
+        new_x, new_y = agent_next.pos
 
         agent_current = current_state.data.agent_states[agent_index]
         enemy_food_list = agent_current.get_food(current_state) 
@@ -695,18 +700,67 @@ class PacmanRewardFunction:
         # +5 pts if agent killed an enemy agent
         # -5 pts if agent was killed
 
+        # eating capsule bonus
         agent_next = next_state.data.agent_states[agent_index]
-        new_x, new_y = current_agent.pos
+        new_x, new_y = agent_next.pos
 
         agent_current = current_state.data.agent_states[agent_index]
         enemy_capsules = agent_current.get_capsules(current_state)
 
         bonus_eating_capsule = self.bonus_eating_capsule_multiplier * int(enemy_capsules[new_x][new_y])
 
+        # dying penalty
+
+        dying_penalty = 0
+
+        past_x, past_y = agent_current.pos
+
+        displacement_x = new_x - past_x
+        displacemet_y = new_y - past_y 
+
+        sq_magnitude = displacement_x * displacement_x + displacement_y * displacement_y
+
+        if(4 < sq_magnitude) : 
+            # if agent has "teleported"  more than 2 units of distance, assume it died
+            dying_penalty += self.penalty_dying
+
+        # reward killing
+
+        kill_reward = 0
+
+        enemy_list = agent_current.get_opponents(current_state)
+        
+        # this code may cause errors is the 2 ally agents are very near to each other
+        # however, frankly, i don't care
+        
+        for enemy_index in enemy_list : 
+            enemy = current_state.data.agent_states[enemy_index]
+            enemy_x, enemy_y = enemy.pos
+
+            dist_to_agent_x = enemy_x - past_x
+            dist_to_agent_y = enemy_y - past_y
+
+            dist_to_agent = dist_to_agent_x * dist_to_agent_x + dist_to_agent_y * dist_to_agent_y
+
+            if (4 < dist_to_agent) : continue
+
+            enemy_new = agent_next.data.agent_states[enemy_index]
+            new_enemy_x, new_enemy_y = enemy_new.pos
+
+            displ_x = new_enemy_x - enemy_x 
+            displ_y = new_enemy_y - enemy_y 
+
+            displ = displ_x * displ_x + displ_y * displ_y
+
+            if (4 < displ) : 
+                kill_reward += self.reward_killing
+                break # 1 kill per turn
 
 
+            
 
-        enemy_reward = bonus_eating_capsule
+
+        enemy_reward = bonus_eating_capsule + dying_penalty + kill_reward
 
         return enemy_reward
 
