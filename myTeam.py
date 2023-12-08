@@ -470,16 +470,22 @@ class BasicAgentAI(CaptureAgent) :
             if not(-relevance_limit < reward < relevance_limit) : 
                 # if the reward is interesting enough, train the IA 
 
-                correct_vector = compute_reward_vector(self.prev_output[0], reward)
+                correct_vector = BasicAgentAI.compute_reward_vector(self.prev_output[0], reward)
                 
                 if True: # debug extra info (?)
-                    print(state_info_nn)
+                    # print(state_info_nn)
                     print(f"Num epochs: {n_epochs}")
-                    print(f"expected result: {expected_result}")
+                    print(f"corrected result: {correct_vector}")
                 
                 expanded_input = expand_dims(state_info_nn, axis=-1)
+                expanded_output = expand_dims(correct_vector, axis=-1)
 
-                self.model.fit(expanded_input, correct_vector, epochs=n_epochs)
+                print(expanded_input.shape)
+                print(correct_vector.shape)
+                print(expanded_output.shape)
+
+
+                self.model.fit(expanded_input, expanded_output, epochs=n_epochs)
 
             # model.save("tf_pacman_model")
 
@@ -519,7 +525,7 @@ class BasicAgentAI(CaptureAgent) :
         return best_value_action[0]
 
 
-    def compute_expected_result(self, game_state):
+    def compute_expected_result(self, game_state): # currently unused
         # Example: Consider the reward for each action based on the current state
         # You might need to replace this with your actual game logic.
 
@@ -649,8 +655,10 @@ class PacmanRewardFunction:
     eating_food_reward = 0.5
     penalty_dying = -2.5
     rewand_killing = 2.5
-    going_to_centre_reward = 0.15
+    going_to_centre_reward_value = 0.15
     moves_with_centre_reward = 20
+
+    count_total_actions = 0
 
     def __init__(self):
         # Create an instance of ClassA
@@ -676,21 +684,31 @@ class PacmanRewardFunction:
         # Reward for killing enemies
         enemy_reward = PacmanRewardFunction.calculate_enemy_reward(current_state, next_state, agent_index)
 
-        going_centre_reward = going_to_centre_reward(current_state, next_state, agent_index)
+        going_centre_reward = PacmanRewardFunction.going_to_centre_reward(current_state, next_state, agent_index)
 
         # Combine individual rewards (you might want to adjust weights based on importance)
         total_reward = food_reward + enemy_reward + going_centre_reward
+
+        if(action_taken == "Stop") : total_reward += -0.3
 
         return total_reward
 
     def calculate_food_reward(current_state, next_state, agent_index): 
         agent_next = next_state.data.agent_states[agent_index]
-        new_x, new_y = agent_next.pos
+        new_x, new_y = agent_next.configuration.pos 
+        new_x = int(new_x)
+        new_y = int(new_y)
 
-        agent_current = current_state.data.agent_states[agent_index]
-        enemy_food_list = agent_current.get_food(current_state) 
+        if(agent_index in current_state.red_team) : 
+            #red team
+            enemy_food_list = current_state.get_red_food() 
+        else: 
+            enemy_food_list = current_state.get_blue_food() 
 
-        return eating_food_reward * int(enemy_food_list[new_x][new_y]) 
+
+        # agent_current = current_state.data.agent_states[agent_index]
+
+        return PacmanRewardFunction.eating_food_reward * int(enemy_food_list[new_x][new_y]) 
 
         # return +1 pts if agent just eated a food
 
@@ -704,40 +722,59 @@ class PacmanRewardFunction:
 
         # eating capsule bonus
         agent_next = next_state.data.agent_states[agent_index]
-        new_x, new_y = agent_next.pos
+        new_x, new_y = agent_next.configuration.pos
+        new_x = int(new_x)
+        new_y = int(new_y)
 
         agent_current = current_state.data.agent_states[agent_index]
-        enemy_capsules = agent_current.get_capsules(current_state)
+        is_red_team = True
+        if(agent_index in current_state.red_team) : 
+            #red team
+            enemy_capsules = current_state.get_red_capsules() 
+        else: 
+            enemy_capsules = current_state.get_blue_capsules() 
+            is_red_team = False
 
-        bonus_eating_capsule = self.bonus_eating_capsule_multiplier * int(enemy_capsules[new_x][new_y])
+
+        bonus_eating_capsule = PacmanRewardFunction.bonus_eating_capsule_multiplier * int((new_x, new_y) in enemy_capsules)
 
         # dying penalty
 
         dying_penalty = 0
 
-        past_x, past_y = agent_current.pos
+        past_x, past_y = agent_current.configuration.pos
+        past_x = int(past_x)
+        past_y = int(past_y)
 
         displacement_x = new_x - past_x
-        displacemet_y = new_y - past_y 
+        displacement_y = new_y - past_y 
 
         sq_magnitude = displacement_x * displacement_x + displacement_y * displacement_y
 
         if(4 < sq_magnitude) : 
             # if agent has "teleported"  more than 2 units of distance, assume it died
-            dying_penalty += self.penalty_dying
+            dying_penalty += PacmanRewardFunction.penalty_dying
 
         # reward killing
 
         kill_reward = 0
 
-        enemy_list = agent_current.get_opponents(current_state)
+        if(is_red_team) : 
+            enemy_list = current_state.get_blue_team_indices()
+        else : 
+            enemy_list = current_state.get_red_team_indices()
         
         # this code may cause errors is the 2 ally agents are very near to each other
         # however, frankly, i don't care
         
         for enemy_index in enemy_list : 
             enemy = current_state.data.agent_states[enemy_index]
-            enemy_x, enemy_y = enemy.pos
+
+            enemy_pos = enemy.get_position()
+            if(enemy_pos == None) : continue
+            enemy_x, enemy_y = enemy_pos
+            enemy_x = int(enemy_x)
+            enemy_y = int(enemy_y)
 
             dist_to_agent_x = enemy_x - past_x
             dist_to_agent_y = enemy_y - past_y
@@ -747,7 +784,9 @@ class PacmanRewardFunction:
             if (4 < dist_to_agent) : continue
 
             enemy_new = agent_next.data.agent_states[enemy_index]
-            new_enemy_x, new_enemy_y = enemy_new.pos
+            new_enemy_x, new_enemy_y = enemy_new.configuration.pos
+            new_enemy_x = int(new_enemy_x)
+            new_enemy_y = int(new_enemy_y)
 
             displ_x = new_enemy_x - enemy_x 
             displ_y = new_enemy_y - enemy_y 
@@ -755,7 +794,7 @@ class PacmanRewardFunction:
             displ = displ_x * displ_x + displ_y * displ_y
 
             if (4 < displ) : 
-                kill_reward += self.reward_killing
+                kill_reward += PacmanRewardFunction.reward_killing
                 break # 1 kill per turn
 
         enemy_reward = bonus_eating_capsule + dying_penalty + kill_reward
@@ -768,21 +807,24 @@ class PacmanRewardFunction:
         
         agent_next = next_state.data.agent_states[agent_index]
 
-        if(self.moves_with_centre_reward < agent_next.num_action): 
+        if(PacmanRewardFunction.moves_with_centre_reward < PacmanRewardFunction.count_total_actions): 
             return 0
 
         centre_reward = 0
 
         agent_current = current_state.data.agent_states[agent_index]
-        past_x, past_y = agent_current.pos
-        new_x, new_y = agent_next.pos
+        past_x, past_y = agent_current.configuration.pos
+        new_x, new_y = agent_next.configuration.pos
+        new_x = int(new_x)
+        new_y = int(new_y)
 
         if(new_y != past_y): 
             if(abs(16 - new_y) < abs(16 - past_y)): 
-                centre_reward += going_to_centre_reward
+                centre_reward += PacmanRewardFunction.going_to_centre_reward_value
             else: 
-                centre_reward += -going_to_centre_reward/2
+                centre_reward += -PacmanRewardFunction.going_to_centre_reward_value/2
 
+        PacmanRewardFunction.count_total_actions += 1
 
         return centre_reward
 
