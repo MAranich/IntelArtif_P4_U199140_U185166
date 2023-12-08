@@ -65,7 +65,7 @@ def create_team(first_index, second_index, is_red,
 
 
     first = "BasicAgentAI" 
-    second = "BasicAgentAI"
+    second = "BasicAgentAI" # now they are both dumb :/
 
     return [eval(first)(first_index), eval(second)(second_index)]
 
@@ -292,16 +292,7 @@ python capture.py -r agents/IntelArtif_P4_U199140_U185166/myTeam.py -b agents\In
 
     pip install tensorflow
     
-    # pip install stable-baselines3[extra]
 
-    ######
-
-    import os # operating system lib
-    import gymnasium as gym 
-    # Documentation: https://gymnasium.farama.org/index.html
-    from stable-baselines3 import PPO 
-    from stable-baselines3.common.vec_env import DummyVecEnv
-    from stable-baselines3.common.evaluation import evaluate_policy
     
     """
 
@@ -469,7 +460,7 @@ class BasicAgentAI(CaptureAgent) :
             state_info_nn = GameStateSintetizedInfo.get_info_nn(prev_state, self)
 
             reward = 0 # TODO: compute reward
-            reward  = PacmanRewardFunction.calculate_reward(prev_state, game_state, self.prev_output[1])
+            reward  = PacmanRewardFunction.calculate_reward(prev_state, game_state, self.prev_output[1], self.index)
 
             
             relevance_limit = 0.075
@@ -591,7 +582,7 @@ class BasicAgentAI(CaptureAgent) :
 
 
 class MinimaxAgent(ReflexCaptureAgent):
-
+    # currently unused
 
     def getAction(self, gameState):
         
@@ -649,7 +640,10 @@ class MinimaxAgent(ReflexCaptureAgent):
     
 
 class PacmanRewardFunction:
-    # currenly unused ===================
+
+    # parameters
+    bonus_eating_capsule_multiplier = 1.5
+    eating_food_reward = 1
 
     def __init__(self):
         # Create an instance of ClassA
@@ -663,16 +657,17 @@ class PacmanRewardFunction:
         I marked with TODOs the parts that need atention
         """
     
-    def calculate_reward(current_state, next_state, action_taken):
+    def calculate_reward(current_state, next_state, action_taken, agent_index):
 
         # TODO: add position reward (?)
 
 
         # Reward for collecting food
-        food_reward = PacmanRewardFunction.calculate_food_reward(next_state.carried_food - current_state.carried_food)
+        # food_reward = PacmanRewardFunction.calculate_food_reward(next_state.carried_food - current_state.carried_food)
+        food_reward = PacmanRewardFunction.calculate_food_reward(current_state, next_state, agent_index)
 
         # Reward for killing enemies
-        enemy_reward = PacmanRewardFunction.calculate_enemy_reward(next_state.enemy_1_is_weak, next_state.enemy_2_is_weak)
+        enemy_reward = PacmanRewardFunction.calculate_enemy_reward(current_state, next_state, agent_index)
 
         # TODO: add small reward if agent is walking to the centre centre (+0.2 pt)
 
@@ -681,35 +676,37 @@ class PacmanRewardFunction:
 
         return total_reward
 
-    def calculate_food_reward(food_collected): 
+    def calculate_food_reward(current_state, next_state, agent_index): 
+        agent_next = next_state.data.agent_states[agent_index]
+        new_x, new_y = current_agent.pos
 
-        # TODO: return +1 pts if agent just eated a food
+        agent_current = current_state.data.agent_states[agent_index]
+        enemy_food_list = agent_current.get_food(current_state) 
 
-        # Define your reward for collecting food
-        return food_collected * 10  # You can adjust the multiplier
-        # this method has to be redone. this gives the agent a reward for 
-        # hoarding food and not crossing to ally territory
+        return eating_food_reward * int(enemy_food_list[new_x][new_y]) 
+
+        # return +1 pts if agent just eated a food
 
 
-    def calculate_enemy_reward(enemy_1_is_weak, enemy_2_is_weak):
 
-        # TODO: return +1 pts if agent eated capsule that makes enemies scared
+    def calculate_enemy_reward(current_state, next_state, agent_index):
+
+        # TODO: return +1.5 pts if agent eated capsule that makes enemies scared
         # +5 pts if agent killed an enemy agent
         # -5 pts if agent was killed
-        
 
-        # Define your reward for killing enemies
+        agent_next = next_state.data.agent_states[agent_index]
+        new_x, new_y = current_agent.pos
 
-        return 20 * (int(enemy_1_is_weak) + int(enemy_2_is_weak))# rewritten the function without ifs
-        # return 20 * (enemy_1_is_weak + enemy_2_is_weak) # maybe this is even better (?)
+        agent_current = current_state.data.agent_states[agent_index]
+        enemy_capsules = agent_current.get_capsules(current_state)
 
-        # ^this method is giving the agent a reward continously while they are exposed
+        bonus_eating_capsule = self.bonus_eating_capsule_multiplier * int(enemy_capsules[new_x][new_y])
 
-        enemy_reward = 0
-        if enemy_1_is_weak:
-            enemy_reward += 20  # Adjust rewards based on the importance of killing enemies
-        if enemy_2_is_weak:
-            enemy_reward += 20
+
+
+
+        enemy_reward = bonus_eating_capsule
 
         return enemy_reward
 
@@ -718,7 +715,7 @@ def reward(self, current_state):
     next_state =  self.get_successor(self, current_state, action_taken) # Update with the next state after an action
 
 
-    reward = PacmanRewardFunction.calculate_reward(current_state, next_state, action_taken)
+    reward = PacmanRewardFunction.calculate_reward(current_state, next_state, action_taken, self.index)
     print("Reward:", reward)
 
 
